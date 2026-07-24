@@ -11,11 +11,7 @@ app.use(express.json());
 
 let vehicleDatabase = [];
 
-// WhatsApp Setup
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-
-// Render Linux Server par system Chrome uthane ke liye executablePath logic:
+// Render/Linux Environment ke liye WhatsApp Client Setup
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -35,22 +31,24 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-    console.log('--- SCAN THIS QR CODE ON WHATSAPP ---');
+    console.log('====================================================');
+    console.log('👉 SCAN THIS QR CODE ON WHATSAPP:');
     qrcode.generate(qr, { small: true });
+    console.log('====================================================');
 });
 
 client.on('ready', () => {
-    console.log('🚀 WhatsApp Bot Client Ready & Online on Render!');
+    console.log('🚀 WHATSAPP BOT READY & ONLINE ON RENDER!');
 });
 
 client.initialize();
 
-// Frontend/CodePen se data lene ka route
+// API Route for Frontend
 app.post('/api/vehicles', (req, res) => {
     const vehicle = req.body;
     vehicleDatabase.push(vehicle);
-    console.log(`✅ Vehicle Added: ${vehicle.vehNo}`);
-    res.json({ success: true, message: 'Saved successfully!' });
+    console.log(`✅ Vehicle Saved: ${vehicle.vehNo}`);
+    res.json({ success: true, message: 'Vehicle saved successfully!' });
 });
 
 // Daily Morning 8:00 AM Cron Job
@@ -62,7 +60,7 @@ cron.schedule('0 8 * * *', async () => {
         let expiringDocs = [];
         if (v.docs) {
             for (let [docName, expDate] of Object.entries(v.docs)) {
-                if (moment(expDate).format('YYYY-MM-DD') === targetDate) {
+                if (expDate && moment(expDate).format('YYYY-MM-DD') === targetDate) {
                     expiringDocs.push(docName);
                 }
             }
@@ -81,7 +79,7 @@ cron.schedule('0 8 * * *', async () => {
 
             try {
                 await client.sendMessage(chatId, message);
-                console.log(`✅ Alert sent to ${v.ownerName}`);
+                console.log(`✅ Alert sent to ${v.ownerName} (${v.vehNo})`);
             } catch (err) {
                 console.error(`❌ Error sending to ${v.vehNo}:`, err);
             }

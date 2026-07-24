@@ -11,12 +11,11 @@ app.use(express.json());
 
 let vehicleDatabase = [];
 
-// Render/Linux Environment ke liye WhatsApp Client Setup
+// Puppeteer configuration - Auto-detect installed Chrome
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable' || '/usr/bin/chromium-browser',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',

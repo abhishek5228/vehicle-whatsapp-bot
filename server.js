@@ -11,12 +11,11 @@ app.use(express.json());
 
 let vehicleDatabase = [];
 
-// Puppeteer configuration - Auto-detect installed Chrome
+// Clean Puppeteer Config
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        executablePath: '/usr/bin/chromium-browser', // Standard Linux Chromium path
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -43,7 +42,7 @@ client.on('ready', () => {
 
 client.initialize();
 
-// API Route for Frontend
+// API Route for Frontend (CodePen)
 app.post('/api/vehicles', (req, res) => {
     const vehicle = req.body;
     vehicleDatabase.push(vehicle);

@@ -16,8 +16,7 @@ const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        // Render dwara install kiya gaya Chrome path:
-        executablePath: '/opt/render/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux64/chrome',
+        executablePath: '/usr/bin/chromium-browser', // Standard Linux Chromium path
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',

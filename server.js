@@ -3,15 +3,15 @@ const cors = require('cors');
 const cron = require('node-cron');
 const moment = require('moment');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 let vehicleDatabase = [];
+let latestQRCode = '';
 
-// Clean Puppeteer Config
+// WhatsApp Client Config
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -30,19 +30,56 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-    console.log('====================================================');
-    console.log('👉 SCAN THIS QR CODE ON WHATSAPP:');
-    qrcode.generate(qr, { small: true });
-    console.log('====================================================');
+    console.log('👉 Naya QR Code Generate Ho Gaya!');
+    latestQRCode = qr;
 });
 
 client.on('ready', () => {
-    console.log('🚀 WHATSAPP BOT READY & ONLINE ON RENDER!');
+    console.log('🚀 WHATSAPP BOT READY & ONLINE!');
+    latestQRCode = 'CONNECTED';
 });
 
 client.initialize();
 
-// API Route for Frontend (CodePen)
+// 🟢 ROOT ROUTE (Homepage Check)
+app.get('/', (req, res) => {
+    res.send('<h1>Vehicle Alert Backend Server is Running Live!</h1><p>Go to <a href="/qr">/qr</a> to scan WhatsApp QR Code.</p>');
+});
+
+// 🖼️ CLEAN HD QR CODE PAGE (Isi route se QR dikhega)
+app.get('/qr', (req, res) => {
+    if (latestQRCode === 'CONNECTED') {
+        return res.send(`
+            <div style="text-align:center; padding:50px; font-family:sans-serif; background:#0f172a; color:#fff; min-height:100vh;">
+                <h1 style="color:#10b981;">✅ WhatsApp Successfully Connected!</h1>
+                <p>Aapka WhatsApp Bot Active hai aur alerts bhejne ke liye ready hai.</p>
+            </div>
+        `);
+    }
+
+    if (!latestQRCode) {
+        return res.send(`
+            <div style="text-align:center; padding:50px; font-family:sans-serif;">
+                <h2>⏳ QR Code generate ho raha hai...</h2>
+                <p>Kripya 15-20 seconds wait karke page Refresh (F5) karein.</p>
+            </div>
+        `);
+    }
+
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(latestQRCode)}`;
+    
+    res.send(`
+        <div style="text-align:center; padding:40px; font-family:sans-serif; background-color:#0f172a; color:#fff; min-height:100vh;">
+            <h2 style="color:#38bdf8;">📱 Scan This QR Code on WhatsApp</h2>
+            <div style="margin:20px auto; background:#fff; padding:15px; display:inline-block; border-radius:16px;">
+                <img src="${qrImageUrl}" alt="WhatsApp QR Code" style="width:280px; height:280px; display:block;" />
+            </div>
+            <p style="color:#94a3b8; font-size:14px;">WhatsApp > Linked Devices > Link a Device par jaakar scan karein.</p>
+        </div>
+    `);
+});
+
+// API Route for Frontend
 app.post('/api/vehicles', (req, res) => {
     const vehicle = req.body;
     vehicleDatabase.push(vehicle);
@@ -52,7 +89,6 @@ app.post('/api/vehicles', (req, res) => {
 
 // Daily Morning 8:00 AM Cron Job
 cron.schedule('0 8 * * *', async () => {
-    console.log('⏰ Checking 2-Day Expiries...');
     const targetDate = moment().add(2, 'days').format('YYYY-MM-DD');
 
     for (let v of vehicleDatabase) {
